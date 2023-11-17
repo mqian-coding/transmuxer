@@ -8,28 +8,27 @@ import (
 	"path/filepath"
 )
 
-func TransmuxToMKV(directoryPath string) error {
-	ffmpegBinaryPath := filepath.Join(directoryPath, "segments", "ffmpeg")
-	outputMKVFilePath := filepath.Join(directoryPath, "output", "output.mkv")
-	inputFilesPattern := filepath.Join(directoryPath, "segments", "segment_*.ts")
-	// Get a list of all files in the input directory
-	files, err := filepath.Glob(inputFilesPattern)
-	if err != nil {
-		return err
-	}
+func TransmuxToMKV(directoryPath, name, staticDir string) error {
+	outputMKVFilePath := staticDir + "/" + name + ".mkv"
 
 	input, err := os.Create(filepath.Join(directoryPath, "segments", "input.txt"))
 	if err != nil {
 		return err
 	}
 	defer os.Remove(input.Name())
+
+	inputFilesPattern := filepath.Join(directoryPath, "segments", "segment_*.ts")
+	files, err := filepath.Glob(inputFilesPattern)
+	if err != nil {
+		return err
+	}
 	for _, file := range files {
 		input.WriteString("file '" + filepath.Base(file) + "'\n")
 	}
 	input.Close()
-	// Run FFmpeg with the file list and fixed framerate
+
 	cmd := exec.Command(
-		ffmpegBinaryPath,
+		filepath.Join(directoryPath, "segments", "ffmpeg"),
 		"-f", "concat",
 		"-i", input.Name(),
 		"-c", "copy",

@@ -22,7 +22,6 @@ import (
 type FileManager struct {
 	ParentDir   string
 	SegmentsDir string
-	OutputDir   string
 }
 
 const maxRetryAttempts = 5
@@ -33,7 +32,6 @@ func NewFileManager(tmpDir string) (*FileManager, error) {
 	myDir := tmpDir + "/" + uuid.New().String()
 	newDirs = append(newDirs, myDir)
 	newDirs = append(newDirs, myDir+"/segments")
-	newDirs = append(newDirs, myDir+"/output")
 	for _, dir := range newDirs {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return nil, err
@@ -43,7 +41,6 @@ func NewFileManager(tmpDir string) (*FileManager, error) {
 	return &FileManager{
 		ParentDir:   myDir,
 		SegmentsDir: myDir + "/segments",
-		OutputDir:   myDir + "/output",
 	}, nil
 }
 
@@ -125,8 +122,8 @@ func (f *FileManager) downloadSegment(seg *m3u8.MediaSegment, segmentNamePrefix 
 	return nil
 }
 
-func (f *FileManager) SegmentsToMKV() error {
-	return utils.TransmuxToMKV(f.ParentDir)
+func (f *FileManager) SegmentsToMKV(name, staticDir string) error {
+	return utils.TransmuxToMKV(f.ParentDir, name, staticDir)
 }
 
 func (f *FileManager) copyFFMPEGBinary() error {
@@ -150,7 +147,6 @@ func copyFile(source, destination string) error {
 	if err != nil {
 		return err
 	}
-
 	if err = os.WriteFile(destination, input, 0644); err != nil {
 		return err
 	}

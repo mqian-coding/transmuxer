@@ -40,7 +40,8 @@ func Transmux(in TransmuxInput) error {
 		}
 	}()
 
-	media, err := utils.ParseAsMediaPlaylist(in.PlaylistURL)
+	// Get the Media Playlist
+	media, mediaPlaylistURL, err := utils.ParseAsMediaPlaylist(in.PlaylistURL, 0)
 	if media == nil {
 		return errors.New("media playlist cannot be nil")
 	}
@@ -49,7 +50,7 @@ func Transmux(in TransmuxInput) error {
 	}
 
 	// Enrich Segment URLs with domain name
-	domain, err := utils.GetSegmentURLPrefix(in.PlaylistURL)
+	domain, err := utils.GetSegmentURLPrefix(mediaPlaylistURL)
 	if err != nil {
 		return err
 	}
@@ -61,7 +62,7 @@ func Transmux(in TransmuxInput) error {
 	}
 
 	// Stitch into mkv
-	if err = manager.SegmentsToMKV(); err != nil {
+	if err = manager.SegmentsToMKV(in.OutputName, TheServer.StaticDir); err != nil {
 		return err
 	}
 	log.Printf(fmt.Sprintf("transmux request complete: url: %s, name: %s", in.PlaylistURL, in.OutputName))
