@@ -1,4 +1,4 @@
-package transmuxer
+package host
 
 import (
 	"concurrency-practice/pkg/utils"
@@ -12,7 +12,6 @@ import (
 	"math"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -24,7 +23,8 @@ type FileManager struct {
 	SegmentsDir string
 }
 
-const maxRetryAttempts = 5
+const maxRetryAttempts = 10
+const retryBase = 1.25
 
 func NewFileManager(tmpDir string) (*FileManager, error) {
 	var err error
@@ -70,7 +70,7 @@ func (f *FileManager) downloadSegments(media *m3u8.MediaPlaylist, segmentNamePre
 					break
 				}
 				if err != nil {
-					time.Sleep(time.Duration(math.Pow(2, float64(i))))
+					time.Sleep(time.Duration(math.Pow(retryBase, float64(i))))
 				}
 			}
 			if err != nil {
@@ -122,20 +122,38 @@ func (f *FileManager) downloadSegment(seg *m3u8.MediaSegment) error {
 	return nil
 }
 
-func (f *FileManager) SegmentsToMKV(name, staticDir string) error {
-	return utils.TransmuxToMKV(f.ParentDir, name, staticDir)
-}
+func (f *FileManager) saveSegmentsAndPlaylist(outputMediaPlaylistDir, outputMediaSegmentsDir string, media *m3u8.MediaPlaylist) error {
+	// Save Playlist
+	if err := func(outputMediaPlaylistDir, outputMediaSegmentsDir string, media *m3u8.MediaPlaylist) error {
+		if outputMediaPlaylistDir == "" {
+			return errors.New("file server has no valid output path for hosting media")
+		}
+		if err := os.MkdirAll(outputMediaPlaylistDir, 0755); err != nil {
+			return err
+		}
+		if media == nil {
+			return errors.New("media playlist cannot be nil")
+		}
 
-func (f *FileManager) copyFFMPEGBinary() error {
-	ffmpegBinaryPath := "bin/ffmpeg/ffmpeg"
-	if _, err := os.Stat("bin/ffmpeg/ffmpeg"); err != nil {
-		return err
-	}
-	ffmpegDestPath := filepath.Join(f.SegmentsDir, "ffmpeg")
-	if err := utils.CopyFile(ffmpegBinaryPath, ffmpegDestPath); err != nil {
-		return err
-	}
-	if err := os.Chmod(ffmpegDestPath, 0755); err != nil {
+		file, err := os.Create(outputMediaPlaylistDir + "/playlist.m3u8")
+		if err != nil {
+			return err
+		}
+		if _, err = file.WriteString(media.String()); err != nil {
+			return err
+		}
+
+		// Save Segments
+		if outputMediaSegmentsDir == "" {
+			return errors.New("file server has no valid output path for hosting media segments")
+		}
+		if err = os.MkdirAll(outputMediaSegmentsDir, 0755); err != nil {
+			return err
+		}
+		return utils.CopyDir(outputMediaSegmentsDir, f.SegmentsDir)
+	}(outputMediaPlaylistDir, outputMediaSegmentsDir, media); err != nil {
+		os.RemoveAll(outputMediaPlaylistDir)
+		os.RemoveAll(outputMediaSegmentsDir)
 		return err
 	}
 	return nil

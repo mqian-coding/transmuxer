@@ -31,9 +31,8 @@ func TransmuxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = transmuxer.Transmux(transmuxer.TransmuxInput{
-		PlaylistURL:           u,
-		OutputName:            n,
-		NormalizeSegmentNames: true,
+		PlaylistURL: u,
+		OutputName:  n,
 	}); err != nil {
 		log.Printf(fmt.Sprintf("transmux request failed: %s", err.Error()))
 		http.Error(w, err.Error(), http.StatusBadRequest)

@@ -1,4 +1,4 @@
-package transmuxer
+package host
 
 import (
 	"concurrency-practice/internal/store"
@@ -9,27 +9,25 @@ import (
 	"os"
 )
 
-type TransmuxInput struct {
+type PlayInput struct {
 	PlaylistURL string
-	OutputName  string
+	Filename    string
 }
 
-func Transmux(in TransmuxInput) error {
-	log.Printf(fmt.Sprintf("transmux request received: url: %s, name: %s", in.PlaylistURL, in.OutputName))
+func GeneratePlaylist(in PlayInput) error {
+	log.Printf(fmt.Sprintf("playlist request received: url: %s, name: %s", in.PlaylistURL, in.Filename))
 
 	if !store.IsServerInitialized() {
-		return errors.New("the transmuxer file server is not initialized")
+		return errors.New("the file server is not initialized")
 	}
+
 	manager, err := NewFileManager(store.TheServer.TempDir)
+	defer manager.Cleanup()
 	if err != nil {
 		return err
 	}
-	log.Printf("created new file manager at directory: %s", manager.ParentDir)
 
-	if err = manager.copyFFMPEGBinary(); err != nil {
-		return err
-	}
-	log.Printf("copied ffmpeg binary to: %s", manager.ParentDir)
+	log.Printf("created new file manager at directory: %s", manager.ParentDir)
 
 	defer func() {
 		if _, err := os.Stat(manager.ParentDir); err != nil {
@@ -54,6 +52,8 @@ func Transmux(in TransmuxInput) error {
 	if err != nil {
 		return err
 	}
+
+	// Enrich the copied playlist
 	utils.EnrichMediaPlaylistSegments(media, domain)
 
 	// Download all the segments in the media playlist
@@ -61,10 +61,13 @@ func Transmux(in TransmuxInput) error {
 		return err
 	}
 
-	// Stitch into mkv
-	if err = manager.SegmentsToMKV(in.OutputName, store.TheServer.StaticDir); err != nil {
+	// repoint the segment uris for serving
+	utils.NormalizeMediaPlaylistSegments(media)
+
+	if err = manager.saveSegmentsAndPlaylist(GetPlaylistDir(in.Filename), GetSegmentsDir(in.Filename), media); err != nil {
 		return err
 	}
-	log.Printf(fmt.Sprintf("transmux request complete: url: %s, name: %s", in.PlaylistURL, in.OutputName))
+
+	log.Printf(fmt.Sprintf("playlist download request complete: url: %s, name: %s", in.PlaylistURL, in.Filename))
 	return nil
 }

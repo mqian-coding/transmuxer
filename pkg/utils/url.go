@@ -28,6 +28,9 @@ func EnrichSegmentWithDir(u string, segName string) string {
 }
 
 func IsNameAdmissible(name string) bool {
+	if name == "" {
+		return false
+	}
 	namePattern := "^[a-zA-Z0-9_]+$"
 	ok, err := regexp.MatchString(namePattern, name)
 	if err != nil {
@@ -36,8 +39,12 @@ func IsNameAdmissible(name string) bool {
 	return ok
 }
 
-func GetSegmentFileName(dir, prefix string, seqID uint64) string {
-	return dir + "/" + prefix + "_" + strings.Repeat("0", numZerosPrefixed(seqID)) + strconv.FormatUint(seqID, 10) + ".ts"
+func GetSegmentFileName(dir string, seqID uint64) string {
+	return path.Join(dir, GetSegmentFileNameNoDirNoExt(seqID)+".ts")
+}
+
+func GetSegmentFileNameNoDirNoExt(seqID uint64) string {
+	return "segment" + "_" + strings.Repeat("0", numZerosPrefixed(seqID)) + strconv.FormatUint(seqID, 10)
 }
 
 func numZerosPrefixed(seqID uint64) int {

@@ -6,6 +6,7 @@ import (
 	"github.com/grafov/m3u8"
 	"log"
 	"net/http"
+	"path"
 )
 
 func ParseAsMediaPlaylist(u string, depth int) (*m3u8.MediaPlaylist, string, error) {
@@ -51,12 +52,21 @@ func ParseAsMediaPlaylist(u string, depth int) (*m3u8.MediaPlaylist, string, err
 	return nil, "", errors.New("neither master playlist nor media playlist")
 }
 
-func NormalizeMediaPlaylistSegments(media *m3u8.MediaPlaylist, dir string) {
+func EnrichMediaPlaylistSegments(media *m3u8.MediaPlaylist, dir string) {
 	for i, s := range media.Segments {
 		if s == nil {
 			break
 		}
 		media.Segments[i].URI = EnrichSegmentWithDir(dir, s.URI)
+	}
+}
+
+func NormalizeMediaPlaylistSegments(media *m3u8.MediaPlaylist) {
+	for i, s := range media.Segments {
+		if s == nil {
+			break
+		}
+		media.Segments[i].URI = path.Join(GetSegmentFileNameNoDirNoExt(s.SeqId), "seg.ts")
 	}
 }
 
@@ -69,13 +79,4 @@ func NumSegs(media *m3u8.MediaPlaylist) int {
 		count++
 	}
 	return count
-}
-
-func FirstSeqId(media *m3u8.MediaPlaylist) int {
-	for _, s := range media.Segments {
-		if s != nil {
-			return int(s.SeqId)
-		}
-	}
-	return 0
 }

@@ -1,7 +1,7 @@
 package server
 
 import (
-	"concurrency-practice/pkg/transmuxer"
+	"concurrency-practice/internal/store"
 	"github.com/gorilla/mux"
 	"github.com/urfave/cli/v2"
 	"log"
@@ -39,7 +39,7 @@ func App() *cli.App {
 
 			log.Println("START: Setup File Server")
 			{
-				if transmuxer.TheServer, err = transmuxer.NewFileServer(cfg.StaticDirName); err != nil {
+				if store.TheServer, err = store.NewFileServer(cfg.StaticDirName); err != nil {
 					log.Println(err.Error())
 					return err
 				}
@@ -69,9 +69,8 @@ func App() *cli.App {
 				// SHUTDOWN
 				<-shutdown
 				log.Println("START: Shutting down...")
-				transmuxer.TheServer.Cleanup()
+				store.TheServer.Cleanup()
 				log.Println("DONE: Shut down the server")
-
 			}
 			return nil
 		},
