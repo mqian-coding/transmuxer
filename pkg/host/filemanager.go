@@ -122,24 +122,35 @@ func (f *FileManager) downloadSegment(seg *m3u8.MediaSegment) error {
 	return nil
 }
 
-func (f *FileManager) saveSegmentsAndPlaylist(outputMediaPlaylistDir, outputMediaSegmentsDir string, media *m3u8.MediaPlaylist) error {
-	// Save Playlist
-	if err := func(outputMediaPlaylistDir, outputMediaSegmentsDir string, media *m3u8.MediaPlaylist) error {
-		if outputMediaPlaylistDir == "" {
+func (f *FileManager) saveSegmentsAndPlaylists(outputManifestDir, outputMediaSegmentsDir string, media *m3u8.MediaPlaylist, master *m3u8.MasterPlaylist) error {
+	if err := func(outputManifestDir, outputMediaSegmentsDir string, media *m3u8.MediaPlaylist) error {
+		// Save chunklist and master playlists
+		if outputManifestDir == "" {
 			return errors.New("file server has no valid output path for hosting media")
 		}
-		if err := os.MkdirAll(outputMediaPlaylistDir, 0755); err != nil {
+		if err := os.MkdirAll(outputManifestDir, 0755); err != nil {
 			return err
+		}
+		if master == nil {
+			return errors.New("master playlist cannot be nil")
 		}
 		if media == nil {
 			return errors.New("media playlist cannot be nil")
 		}
 
-		file, err := os.Create(outputMediaPlaylistDir + "/playlist.m3u8")
+		masterPlaylist, err := os.Create(outputManifestDir + "/playlist.m3u8")
 		if err != nil {
 			return err
 		}
-		if _, err = file.WriteString(media.String()); err != nil {
+		if _, err = masterPlaylist.WriteString(master.String()); err != nil {
+			return err
+		}
+
+		chunklistPlaylist, err := os.Create(outputManifestDir + "/chunklist.m3u8")
+		if err != nil {
+			return err
+		}
+		if _, err = chunklistPlaylist.WriteString(media.String()); err != nil {
 			return err
 		}
 
@@ -151,8 +162,8 @@ func (f *FileManager) saveSegmentsAndPlaylist(outputMediaPlaylistDir, outputMedi
 			return err
 		}
 		return utils.CopyDir(outputMediaSegmentsDir, f.SegmentsDir)
-	}(outputMediaPlaylistDir, outputMediaSegmentsDir, media); err != nil {
-		os.RemoveAll(outputMediaPlaylistDir)
+	}(outputManifestDir, outputMediaSegmentsDir, media); err != nil {
+		os.RemoveAll(outputManifestDir)
 		os.RemoveAll(outputMediaSegmentsDir)
 		return err
 	}

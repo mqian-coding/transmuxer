@@ -5,12 +5,15 @@ import (
 	"concurrency-practice/pkg/utils"
 	"errors"
 	"fmt"
+	"github.com/grafov/m3u8"
 	"log"
 	"os"
+	"path"
 )
 
 type PlayInput struct {
 	PlaylistURL string
+	CaptionsURL string
 	Filename    string
 }
 
@@ -64,7 +67,35 @@ func GeneratePlaylist(in PlayInput) error {
 	// repoint the segment uris for serving
 	utils.NormalizeMediaPlaylistSegments(media)
 
-	if err = manager.saveSegmentsAndPlaylist(GetPlaylistDir(in.Filename), GetSegmentsDir(in.Filename), media); err != nil {
+	var variants []*m3u8.Variant
+	// if there was a captions file, attach it
+	variants = append(variants, &m3u8.Variant{
+		URI:       path.Join("http://localhost:8080", in.Filename, "chunklist.m3u8"),
+		Chunklist: media,
+		//VariantParams: m3u8.VariantParams{
+		//	Subtitles: "subs",
+		//	Alternatives: []*m3u8.Alternative{
+		//		{
+		//			GroupId:    "subs",
+		//			URI:        in.CaptionsURL,
+		//			Type:       "SUBTITLES",
+		//			Language:   "en",
+		//			Name:       "English",
+		//			Default:    true,
+		//			Autoselect: "YES",
+		//			Forced:     "NO",
+		//			Subtitles:  "subs",
+		//		},
+		//	},
+		//},
+	})
+
+	master := &m3u8.MasterPlaylist{
+		Variants: variants,
+	}
+	master.SetVersion(3)
+
+	if err = manager.saveSegmentsAndPlaylists(GetManifestPath(in.Filename), GetSegmentsDir(in.Filename), media, master); err != nil {
 		return err
 	}
 

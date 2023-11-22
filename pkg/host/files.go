@@ -5,7 +5,7 @@ import (
 	"path"
 )
 
-func GetPlaylistDir(filename string) string {
+func GetManifestPath(filename string) string {
 	if store.IsServerInitialized() {
 		return path.Join(store.TheServer.StaticDir, "host", filename)
 	}
@@ -14,7 +14,14 @@ func GetPlaylistDir(filename string) string {
 
 func GetPlaylistPath(filename string) string {
 	if store.IsServerInitialized() {
-		return path.Join(GetPlaylistDir(filename), "playlist.m3u8")
+		return path.Join(GetManifestPath(filename), "playlist.m3u8")
+	}
+	return ""
+}
+
+func GetChunklistPath(filename string) string {
+	if store.IsServerInitialized() {
+		return path.Join(GetManifestPath(filename), "chunklist.m3u8")
 	}
 	return ""
 }

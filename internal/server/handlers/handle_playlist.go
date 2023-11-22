@@ -13,7 +13,9 @@ func PlaylistHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	vars := mux.Vars(r)
 	filename := vars["name"]
-	u := r.URL.Query().Get("u")
+	q := r.URL.Query()
+	u := q.Get("u")
+	cu := q.Get("cu")
 	if !utils.IsNameAdmissible(filename) {
 		http.Error(w, "invalid path variable 'name'", http.StatusBadRequest)
 		return
@@ -30,17 +32,19 @@ func PlaylistHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	if err = host.GeneratePlaylist(host.PlayInput{
-		PlaylistURL: u,
-		Filename:    filename,
-	}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	p := host.GetPlaylistPath(filename)
+	if _, err = os.Stat(p); err != nil {
+		if err = host.GeneratePlaylist(host.PlayInput{
+			PlaylistURL: u,
+			CaptionsURL: cu,
+			Filename:    filename,
+		}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/vnd.apple.mpegurl\"")
-	p := host.GetPlaylistPath(filename)
 	file, err := os.Open(p)
 	defer file.Close()
 	if err != nil {
