@@ -1,14 +1,14 @@
 package host
 
 import (
-	"concurrency-practice/internal/store"
-	"concurrency-practice/pkg/utils"
 	"errors"
 	"fmt"
 	"github.com/grafov/m3u8"
 	"log"
 	"os"
 	"path"
+	"transmuxer/internal/store"
+	"transmuxer/pkg/utils"
 )
 
 type PlayInput struct {

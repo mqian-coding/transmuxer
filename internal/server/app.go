@@ -1,7 +1,6 @@
 package server
 
 import (
-	"concurrency-practice/internal/store"
 	"github.com/gorilla/mux"
 	"github.com/urfave/cli/v2"
 	"log"
@@ -9,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"transmuxer/internal/store"
 )
 
 func App() *cli.App {

@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"concurrency-practice/pkg/host"
-	"concurrency-practice/pkg/utils"
+	"transmuxer/pkg/host"
+	"transmuxer/pkg/utils"
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"

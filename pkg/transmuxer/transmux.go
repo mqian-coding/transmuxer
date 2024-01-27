@@ -1,12 +1,12 @@
 package transmuxer
 
 import (
-	"concurrency-practice/internal/store"
-	"concurrency-practice/pkg/utils"
 	"errors"
 	"fmt"
 	"log"
 	"os"
+	"transmuxer/internal/store"
+	"transmuxer/pkg/utils"
 )
 
 type TransmuxInput struct {

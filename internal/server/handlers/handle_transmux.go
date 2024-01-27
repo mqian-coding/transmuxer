@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"concurrency-practice/pkg/transmuxer"
-	"concurrency-practice/pkg/utils"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"transmuxer/pkg/transmuxer"
+	"transmuxer/pkg/utils"
 )
 
 func TransmuxHandler(w http.ResponseWriter, r *http.Request) {

@@ -1,8 +1,8 @@
 package host
 
 import (
-	"concurrency-practice/internal/store"
 	"path"
+	"transmuxer/internal/store"
 )
 
 func GetManifestPath(filename string) string {

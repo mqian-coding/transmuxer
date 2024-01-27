@@ -1,9 +1,9 @@
 package server
 
 import (
-	"concurrency-practice/internal/server/handlers"
 	"errors"
 	"github.com/gorilla/mux"
+	"transmuxer/internal/server/handlers"
 )
 
 func registerHandlers(r *mux.Router) error {

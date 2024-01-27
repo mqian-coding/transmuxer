@@ -1,8 +1,8 @@
 package main
 
 import (
-	"concurrency-practice/internal/server"
 	"os"
+	"transmuxer/internal/server"
 )
 
 func main() {

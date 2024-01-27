@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"concurrency-practice/pkg/host"
-	"concurrency-practice/pkg/utils"
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
 	"os"
+	"transmuxer/pkg/host"
+	"transmuxer/pkg/utils"
 )
 
 func PlaylistHandler(w http.ResponseWriter, r *http.Request) {
