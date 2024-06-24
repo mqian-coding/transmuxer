@@ -42,22 +42,13 @@ func GeneratePlaylist(in PlayInput) error {
 	}()
 
 	// Get the Media Playlist
-	media, mediaPlaylistURL, err := utils.ParseAsMediaPlaylist(in.PlaylistURL, 0)
+	media, _, err := utils.ParseAsMediaPlaylist(in.PlaylistURL, 0)
 	if media == nil {
 		return errors.New("media playlist cannot be nil")
 	}
 	if err != nil {
 		return err
 	}
-
-	// Enrich Segment URLs with domain name
-	domain, err := utils.GetSegmentURLPrefix(mediaPlaylistURL)
-	if err != nil {
-		return err
-	}
-
-	// Enrich the copied playlist
-	utils.EnrichMediaPlaylistSegments(media, domain)
 
 	// Download all the segments in the media playlist
 	if err = manager.downloadSegments(media, "segment"); err != nil {
@@ -72,22 +63,6 @@ func GeneratePlaylist(in PlayInput) error {
 	variants = append(variants, &m3u8.Variant{
 		URI:       path.Join("http://localhost:8080", in.Filename, "chunklist.m3u8"),
 		Chunklist: media,
-		//VariantParams: m3u8.VariantParams{
-		//	Subtitles: "subs",
-		//	Alternatives: []*m3u8.Alternative{
-		//		{
-		//			GroupId:    "subs",
-		//			URI:        in.CaptionsURL,
-		//			Type:       "SUBTITLES",
-		//			Language:   "en",
-		//			Name:       "English",
-		//			Default:    true,
-		//			Autoselect: "YES",
-		//			Forced:     "NO",
-		//			Subtitles:  "subs",
-		//		},
-		//	},
-		//},
 	})
 
 	master := &m3u8.MasterPlaylist{
